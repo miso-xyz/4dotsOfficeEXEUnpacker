@@ -7,7 +7,7 @@ Imports System.Drawing
 
 Public Class Unpacker
     Private prj As New XmlDocument()
-    Private prj_node As XmlNode = prj.SelectSingleNode("//Misc")
+    Private prj_node As XmlNode()
     Public asm As Assembly
     Public asm_name As String
     Private ext_path As String
@@ -15,11 +15,11 @@ Public Class Unpacker
     Public only_img As Boolean = False
 
     Public Function CryptedImages() As Boolean
-        Return (prj_node.Attributes.GetNamedItem("EncryptImages").Value.ToString() = Boolean.TrueString)
+        Return (prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("EncryptImages").Value.ToString() = Boolean.TrueString)
     End Function
 
     Public Sub LoadXMLProjectInMemory()
-        Using binaryReader As BinaryReader = New BinaryReader(asm.GetManifestResourceStream("EXESlideshow.project.xml"))
+        Using binaryReader As BinaryReader = New BinaryReader(asm.GetManifestResourceStream("project.xml"))
             Using memoryStream As MemoryStream = New MemoryStream()
                 While True
                     Dim num As Long = 32768L
@@ -34,12 +34,6 @@ Public Class Unpacker
             End Using
         End Using
     End Sub
-    Public Function GetPassword()
-        If prj_node.Attributes.GetNamedItem("AskForPasswordValue").Value.ToString() <> Nothing Then
-            Return DecryptString(prj_node.Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823")
-        End If
-        Return ""
-    End Function
 
     Public Shared Function DecryptString(ByVal Message As String, ByVal Passphrase As String) As String
         Dim utf8Encoding As UTF8Encoding = New UTF8Encoding()
@@ -102,7 +96,15 @@ Public Class Unpacker
         Dim manifestResourceNames As String() = asm.GetManifestResourceNames()
         For i As Integer = 2 To manifestResourceNames.Length - 1
             If manifestResourceNames(i).IndexOf("project.xml") >= 0 Then
-                LoadXMLProjectInMemory()
+                Using temp_str As New IO.MemoryStream()
+                    Using FileStream As FileStream = File.Create(ext_path & "project.xml")
+                        asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(FileStream)
+                    End Using
+                    prj.Load(ext_path & "project.xml")
+                    Console.ForegroundColor = ConsoleColor.Magenta
+                    Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
+                    Console.WriteLine()
+                End Using
             Else
                 Using binaryReader As BinaryReader = New BinaryReader(asm.GetManifestResourceStream(manifestResourceNames(i)))
                     Using memoryStream As MemoryStream = New MemoryStream()

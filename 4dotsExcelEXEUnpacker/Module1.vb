@@ -1,9 +1,9 @@
 ﻿Module Module1
     Dim Unpacker As New Unpacker
     Sub Main(ByVal args() As String)
-        Console.Title = "4dots Excel to EXE Unpacker v1.0.0"
+        Console.Title = "4dots Excel to EXE Unpacker v1.0.1"
         If args.Contains("--help") Then
-            Console.WriteLine("4dots Excel to EXE Unpacker v1.0.0 by misonothx | sinister.ly | miyako <3")
+            Console.WriteLine("4dots Excel to EXE Unpacker v1.0.1 by misonothx | sinister.ly | miyako <3")
             Console.WriteLine("Tested with Version 2.0")
             Console.WriteLine()
             Console.WriteLine("--help | Lists available arguments")
@@ -16,7 +16,7 @@
             Console.ReadKey()
             End
         End If
-        Console.WriteLine("4dots Excel to EXE Unpacker v1.0.0 by misonothx | sinister.ly | miyako <3")
+        Console.WriteLine("4dots Excel to EXE Unpacker v1.0.1 by misonothx | sinister.ly | miyako <3")
         Console.Write("arguments given: ")
         If args.Length = 0 Then
             Console.Write("nothing")
