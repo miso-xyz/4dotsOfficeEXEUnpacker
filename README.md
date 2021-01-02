@@ -1,5 +1,5 @@
-# 4dots's Office EXE Unpacker (3 in 1)
-This application can unpack the following packers:
+# 4dots's Office EXE Unpacker (4 in 1)
+This application can unpack the following packers made by 4dots Software:
 ```
 - Excel To EXE Converter (tested on v2.0 & v2.1)
 - Powerpoint To EXE Converter (tested on v3.3)
