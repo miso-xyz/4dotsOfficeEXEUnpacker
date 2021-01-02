@@ -16,6 +16,15 @@ Incompatible with:
 ```
 
 # Changelog
+1.0.4:
+```
+- Added Support for Standalone EXE Locker (tested on v2.1)
+- Added project.xml dumping messages
+
+PS: theres a left-over password, any apps packed with v2.1 can be unpacked with
+@#%$%DDGCS@#$%$$#%$%##%@#%$@#%fgsfgfdg in-app, the unpacker cannot use it as key though.
+```
+
 1.0.3:
 ```
 - Can now unpack 4dots software's ZIP Self Extractor Maker (tested on v1.3).
