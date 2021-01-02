@@ -22,7 +22,7 @@ Incompatible with:
 - Added project.xml dumping messages
 
 PS: theres a left-over password, any apps packed with v2.1 can be unpacked with
-@#%$%DDGCS@#$%$$#%$%##%@#%$@#%fgsfgfdg in-app, the unpacker cannot use it as key though.
+@#%$%DDGCS@#$%$$#%$%##%@#%$@#%fgsfgfdg in-app, the unpacker cannot use it as & key though.
 ```
 
 1.0.3:
