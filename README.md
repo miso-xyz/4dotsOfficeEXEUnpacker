@@ -1,5 +1,10 @@
-# 4dotsExcelEXEUnpacker
-Unpacker for 4dots's Excel to EXE
+# 4dots's Office EXE Unpacker (3 in 1)
+This application can unpack the following packers:
+```
+- Excel To EXE Converter 2.0 & 2.1
+- Powerpoint To EXE Converter 3.3
+- Word To EXE Converter 2.2
+```
 
 # Versions Compatible
 ```%4dotsPackerVersion% : %ToolVersion%```
