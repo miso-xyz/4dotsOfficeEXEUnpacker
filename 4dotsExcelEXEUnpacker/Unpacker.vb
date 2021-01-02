@@ -90,9 +90,12 @@ Public Class Unpacker
                 Console.WriteLine("Packer: Powerpoint To EXE Converter")
             Case "PDFToEXEConverter"
                 Console.WriteLine("Packer: PDF To EXE Converter")
+            Case "ZIPSelfExtractor"
+                Console.WriteLine("Packer: ZIP Self Extractor Maker")
             Case Else
                 Console.WriteLine("Packer: ???")
         End Select
+        Console.WriteLine()
     End Sub
 
     Private Function MoveWithinArray(ByVal array As Array, ByVal source As Integer, ByVal dest As Integer) As Array
@@ -102,9 +105,20 @@ Public Class Unpacker
         Return array
     End Function
 
+    Function getEncAlg(ByVal int As Integer) As String ' The packer only contains 1 algorithm, made a function incase they add some in the future
+        Select Case int
+            Case 0
+                Return "Triple DES"
+            Case Else
+                Return "???"
+        End Select
+    End Function
+
     Public Sub Extract()
         GetPacker()
         Dim prj_dmp As Boolean = False
+        Dim zip_sem As Boolean = False
+        Dim zip_sem_s As Boolean = False
         Dim audio_dmp As Boolean = False
         ext_path = My.Application.Info.DirectoryPath & "/4dotsOfficeEXEConverterUnpacker/" & asm_name & "/"
         IO.Directory.CreateDirectory(ext_path)
@@ -114,27 +128,52 @@ Public Class Unpacker
             If manifestResourceNames(x).Contains("project.xml") Then
                 manifestResourceNames = MoveWithinArray(manifestResourceNames, x, 0)
                 Exit For
+            ElseIf manifestResourceNames(x).Contains("project.zsp") Then
+                zip_sem = True
+                manifestResourceNames = MoveWithinArray(manifestResourceNames, x, 0)
+                Exit For
             End If
         Next
         For i As Integer = 0 To manifestResourceNames.Length - 1
-            If manifestResourceNames(i).IndexOf("project.xml") >= 0 Then
+            If If(zip_sem, manifestResourceNames(i).IndexOf("project.zsp") >= 0, manifestResourceNames(i).IndexOf("project.xml") >= 0) Then
                 Using temp_str As New IO.MemoryStream()
-                    Using FileStream As FileStream = File.Create(ext_path & "project.xml")
+                    Using FileStream As FileStream = File.Create(ext_path & If(zip_sem, "project.zsp", "project.xml"))
                         asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(FileStream)
                     End Using
                     prj_dmp = True
-                    prj.Load(ext_path & "project.xml")
-                    Console.ForegroundColor = ConsoleColor.Magenta
+                    prj.Load(ext_path & If(zip_sem, "project.zsp", "project.xml"))
                     Try
-                        Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
-                    Catch ex As Exception
-                        If IO.File.ReadAllText(ext_path & "project.xml").Contains("AskForPasswordValue") AndAlso prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value <> "" Then
-                            Console.ForegroundColor = ConsoleColor.Red
-                            Console.WriteLine("Failed to retrieve password!")
-                        Else
+                        If zip_sem Then
+                            Dim cn As New List(Of String)
+                            For x = 0 To prj.SelectSingleNode("//Project").ChildNodes.Count - 1
+                                cn.Add(prj.SelectSingleNode("//Project").ChildNodes(x).InnerText)
+                            Next
+                            Console.ForegroundColor = ConsoleColor.Yellow
+                            Console.WriteLine("Encrypted: " & cn(0))
+                            Console.WriteLine("Encryption Algorithm: " & getEncAlg(cn(1)))
                             Console.ForegroundColor = ConsoleColor.Green
-                            Console.WriteLine("Password: Nothing set")
+                            Console.WriteLine("Encryption Password: " & DecryptString(cn(2), "BAD0B46C-EDB8-4BAE-B538-F7C99556A023"))
+                            'Console.WriteLine("Ask For Password: " & cn(3))
+                            Console.WriteLine()
+                            Console.ForegroundColor = ConsoleColor.Magenta
+                            Console.WriteLine("Password: " & If(cn(4) = "", "Nothing set", DecryptString(cn(4), "BAD0B46C-EDB8-4BAE-B538-F7C99556A023")))
+                        Else
+                            Try
+                                Console.ForegroundColor = ConsoleColor.Magenta
+                                Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
+                            Catch ex As Exception
+                                If IO.File.ReadAllText(ext_path & "project.xml").Contains("AskForPasswordValue") AndAlso prj.SelectSingleNode(If(zip_sem, "//Project", "//Misc")).Attributes.GetNamedItem("AskForPasswordValue").Value <> "" Then
+                                    Console.ForegroundColor = ConsoleColor.Red
+                                    Console.WriteLine("Failed to retrieve password!")
+                                Else
+                                    Console.ForegroundColor = ConsoleColor.Green
+                                    Console.WriteLine("Password: Nothing set")
+                                End If
+                            End Try
                         End If
+                    Catch ex As Exception
+                        Console.ForegroundColor = ConsoleColor.Red
+                        Console.WriteLine("Failed to retrieve password & encryption information!")
                     End Try
                     Console.WriteLine()
                 End Using
@@ -150,73 +189,103 @@ Public Class Unpacker
                             End If
                             memoryStream.Write(buffer, 0, num2)
                         End While
-                        If manifestResourceNames(i).IndexOf("4dotsAudio") >= 0 Then
-                            If only_img Then
+                        If zip_sem Then
+                            If manifestResourceNames(i).IndexOf("zipexe.zip") >= 0 Then
                                 Console.ForegroundColor = ConsoleColor.Yellow
-                                Console.WriteLine("Found Background Audio, skipping...")
-                                Console.ResetColor()
-                                Continue For
+                                Console.WriteLine("Found Main ZIP Archive!")
+                                Try
+                                    Using ms As New MemoryStream
+                                        asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(ms)
+                                        File.WriteAllBytes(ext_path & "zipexe.zip", DecryptBytes(ms.ToArray, DecryptString(prj.SelectSingleNode("//Project").ChildNodes(2).InnerText, "BAD0B46C-EDB8-4BAE-B538-F7C99556A023")))
+                                    End Using
+                                    Console.ForegroundColor = ConsoleColor.Green
+                                    Console.WriteLine("Main ZIP Archive Successfully dumped!")
+                                    zip_sem_s = True
+                                Catch ex As Exception
+                                    Console.ForegroundColor = ConsoleColor.Red
+                                    Console.WriteLine("Failed to dump Main ZIP Archive")
+                                    Console.ResetColor()
+                                End Try
                             End If
-                            Console.ForegroundColor = ConsoleColor.Green
-                            Console.WriteLine("Found Background Audio File, setting it in memory to dump!")
-                            Dim text As String = Path.GetTempFileName() + ".wav"
-                            File.WriteAllBytes(text, memoryStream.ToArray())
-                            Dim text2 As String = manifestResourceNames(i).Substring(manifestResourceNames(i).IndexOf("4dotsAudio"))
-                            If text2.IndexOf("4dotsAudioBackgroundMusic") >= 0 Then
-                                Console.ForegroundColor = ConsoleColor.Yellow
-                                Console.WriteLine("dumping Background Audio File...")
-                                Using FileStream As FileStream = File.Create(ext_path & "background-music.wav")
-                                    asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(FileStream)
-                                End Using
+                        Else
+                            If manifestResourceNames(i).IndexOf("4dotsAudio") >= 0 Then
+                                If only_img Then
+                                    Console.ForegroundColor = ConsoleColor.Yellow
+                                    Console.WriteLine("Found Background Audio, skipping...")
+                                    Console.ResetColor()
+                                    Continue For
+                                End If
                                 Console.ForegroundColor = ConsoleColor.Green
-                                Console.WriteLine("Background Audio File dumped!")
-                                Console.ResetColor()
-                                audio_dmp = True
+                                Console.WriteLine("Found Background Audio File, setting it in memory to dump!")
+                                Dim text As String = Path.GetTempFileName() + ".wav"
+                                File.WriteAllBytes(text, memoryStream.ToArray())
+                                Dim text2 As String = manifestResourceNames(i).Substring(manifestResourceNames(i).IndexOf("4dotsAudio"))
+                                If text2.IndexOf("4dotsAudioBackgroundMusic") >= 0 Then
+                                    Console.ForegroundColor = ConsoleColor.Yellow
+                                    Console.WriteLine("dumping Background Audio File...")
+                                    Using FileStream As FileStream = File.Create(ext_path & "background-music.wav")
+                                        asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(FileStream)
+                                    End Using
+                                    Console.ForegroundColor = ConsoleColor.Green
+                                    Console.WriteLine("Background Audio File dumped!")
+                                    Console.ResetColor()
+                                    audio_dmp = True
+                                    If only_audio Then
+                                        Return
+                                    End If
+                                End If
+                            ElseIf IsImage(manifestResourceNames(i)) Then
                                 If only_audio Then
-                                    Return
+                                    Console.ForegroundColor = ConsoleColor.Yellow
+                                    Console.WriteLine("Found Image, skipping...")
+                                    Console.ResetColor()
+                                    Continue For
                                 End If
-                            End If
-                        ElseIf IsImage(manifestResourceNames(i)) Then
-                            If only_audio Then
-                                Console.ForegroundColor = ConsoleColor.Yellow
-                                Console.WriteLine("Found Image, skipping...")
-                                Console.ResetColor()
-                                Continue For
-                            End If
-                            Try
                                 If prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("EncryptImages").Value.ToString = "True" Then
-                                    Console.ForegroundColor = ConsoleColor.Green
-                                    Console.WriteLine("Found Image N°" & img_int + 1 & "! (Crypted), decrypting...")
-                                    Dim buffer2 As Byte() = DecryptBytes(memoryStream.ToArray(), "433424234234-93435849839453")
-                                    'File.WriteAllBytes(manifestResourceNames(i), buffer2)
-                                    Dim stream As MemoryStream = New MemoryStream(buffer2)
-                                    Image.FromStream(stream).Save(manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
-                                    Console.ForegroundColor = ConsoleColor.Yellow
-                                    Console.WriteLine("Dumping image n°" & img_int + 1 & "...")
-                                    'Using fs As New FileStream(ext_path & "\image_" & i & ".png", FileMode.Create)
-                                    '    memoryStream.CopyTo(fs)
-                                    'End Using
-                                    'item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
-                                    Console.WriteLine("Image N°" & img_int + 1 & " successfully dumped!")
-                                    Console.ResetColor()
-                                    img_int += 1
+                                    Try
+                                        Console.ForegroundColor = ConsoleColor.Green
+                                        Console.WriteLine("Found Image N°" & img_int + 1 & "! (Crypted), decrypting...")
+                                        Dim buffer2 As Byte() = DecryptBytes(memoryStream.ToArray(), "433424234234-93435849839453")
+                                        'File.WriteAllBytes(manifestResourceNames(i), buffer2)
+                                        Dim stream As MemoryStream = New MemoryStream(buffer2)
+                                        Image.FromStream(stream).Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
+                                        Console.ForegroundColor = ConsoleColor.Yellow
+                                        Console.WriteLine("Dumping image n°" & img_int + 1 & "...")
+                                        'Using fs As New FileStream(ext_path & "\image_" & i & ".png", FileMode.Create)
+                                        '    memoryStream.CopyTo(fs)
+                                        'End Using
+                                        'item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
+                                        Console.WriteLine("Image N°" & img_int + 1 & " successfully dumped!")
+                                        Console.ResetColor()
+                                        img_int += 1
+                                    Catch ex As Exception
+                                        Console.ForegroundColor = ConsoleColor.Red
+                                        Console.WriteLine("Failed to extract crypted image n°" & img_int + 1)
+                                        Console.ResetColor()
+                                    End Try
+                                    
                                 Else
-                                    Console.ForegroundColor = ConsoleColor.Green
-                                    Console.WriteLine("Found Image N°" & img_int + 1 & "! (Not Crypted), decrypting...")
-                                    Image.FromStream(memoryStream).Save(manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
-                                    Console.ForegroundColor = ConsoleColor.Yellow
-                                    Console.WriteLine("Dumping image n°" & img_int + 1 & "...")
-                                    'Using fs As New FileStream(ext_path & "\image_" & i & ".png", FileMode.Create)
-                                    '    memoryStream.CopyTo(fs)
-                                    'End Using
-                                    'item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
-                                    Console.ForegroundColor = ConsoleColor.Green
-                                    Console.WriteLine("Image N°" & img_int + 1 & " successfully dumped!")
-                                    Console.ResetColor()
-                                    img_int += 1
+                                    Try
+                                        Console.ForegroundColor = ConsoleColor.Green
+                                        Console.WriteLine("Found Image N°" & img_int + 1 & "! (Not Crypted), decrypting...")
+                                        Image.FromStream(memoryStream).Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
+                                        Console.ForegroundColor = ConsoleColor.Yellow
+                                        Console.WriteLine("Dumping image n°" & img_int + 1 & "...")
+                                        'Using fs As New FileStream(ext_path & "\image_" & i & ".png", FileMode.Create)
+                                        '    memoryStream.CopyTo(fs)
+                                        'End Using
+                                        'item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
+                                        Console.ForegroundColor = ConsoleColor.Green
+                                        Console.WriteLine("Image N°" & img_int + 1 & " successfully dumped!")
+                                        Console.ResetColor()
+                                        img_int += 1
+                                    Catch ex As Exception
+                                        Console.ForegroundColor = ConsoleColor.Red
+                                        Console.WriteLine("Failed to extract non-crypted image n°" & img_int + 1)
+                                        Console.ResetColor()
+                                    End Try
                                 End If
-                            Catch
-                            End Try
+                            End If
                         End If
                     End Using
                 End Using
@@ -225,13 +294,21 @@ Public Class Unpacker
         Console.ForegroundColor = ConsoleColor.Green
         Console.WriteLine()
         Console.Write("Done! (dumped ")
-        If prj_dmp Then
-            Console.Write("project.xml, ")
+        If zip_sem Then
+            If zip_sem_s Then
+                Console.Write("zip file)")
+            Else
+                Console.Write("nothing)")
+            End If
+        Else
+            If prj_dmp Then
+                Console.Write("project.xml, ")
+            End If
+            If audio_dmp Then
+                Console.Write("background audio & ")
+            End If
+            Console.Write(img_int & " image(s))")
         End If
-        If audio_dmp Then
-            Console.Write("background audio & ")
-        End If
-        Console.Write(img_int & " image(s))")
         Console.ReadKey()
         End
     End Sub
