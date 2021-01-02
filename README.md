@@ -1,10 +1,13 @@
 # 4dots's Office EXE Unpacker (5 in 1)
 This application can unpack the following packers made by 4dots Software:
 ```
+Converters:
 - Excel To EXE Converter (tested on v2.0 & v2.1)
 - Powerpoint To EXE Converter (tested on v3.3)
 - Word To EXE Converter (tested on v2.2)
 - PDF To EXE Converter (tested on v1.3)
+
+Other:
 - ZIP Self Extractor Maker (tested on v1.3)
 ```
 
