@@ -1,4 +1,4 @@
-# 4dots's Office EXE Unpacker (5 in 1)
+# 4dots's Office EXE Unpacker (6 in 1)
 This application can unpack the following packers made by 4dots Software:
 ```
 Converters:
@@ -9,6 +9,10 @@ Converters:
 
 Other:
 - ZIP Self Extractor Maker (tested on v1.3)
+- Standalone EXE Locker (tested on v2.1) - port of my GUI Unpacker
+
+Incompatible with:
+- Standalone EXE Document Locker (tested on v1.1) | Only Detects Packer
 ```
 
 # Changelog
