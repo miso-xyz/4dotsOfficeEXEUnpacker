@@ -18,23 +18,6 @@ Public Class Unpacker
         Return (prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("EncryptImages").Value.ToString() = Boolean.TrueString)
     End Function
 
-    Public Sub LoadXMLProjectInMemory()
-        Using binaryReader As BinaryReader = New BinaryReader(asm.GetManifestResourceStream("project.xml"))
-            Using memoryStream As MemoryStream = New MemoryStream()
-                While True
-                    Dim num As Long = 32768L
-                    Dim buffer As Byte() = New Byte(num - 1) {}
-                    Dim num2 As Integer = binaryReader.Read(buffer, 0, CInt(num))
-                    If num2 <= 0 Then
-                        Exit While
-                    End If
-                    memoryStream.Write(buffer, 0, num2)
-                End While
-                prj.LoadXml(Encoding.[Default].GetString(memoryStream.ToArray()))
-            End Using
-        End Using
-    End Sub
-
     Public Shared Function DecryptString(ByVal Message As String, ByVal Passphrase As String) As String
         Dim utf8Encoding As UTF8Encoding = New UTF8Encoding()
         Dim md5CryptoServiceProvider As MD5CryptoServiceProvider = New MD5CryptoServiceProvider()
@@ -87,22 +70,72 @@ Public Class Unpacker
         End Try
         Return result
     End Function
+    Sub GetPacker()
+        Dim manifestResourceNames As String() = asm.GetManifestResourceNames()
+        Dim aa_ As New List(Of String)
+        For Each Type In asm.GetTypes()
+            aa_.Add(Type.Namespace)
+        Next
+        Dim ab_ As String
+        For x = 0 To aa_.Count - 1
+            ab_ += aa_(x) & "|"
+        Next
+        Console.ForegroundColor = ConsoleColor.Yellow
+        Select Case aa_(1)
+            Case "ConvertExcelToEXE4dots"
+                Console.WriteLine("Packer: Excel To EXE Converter")
+            Case "ConvertWordToEXE4dots"
+                Console.WriteLine("Packer: Word To EXE Converter")
+            Case "ConvertPowerpointToEXE4dots"
+                Console.WriteLine("Packer: Powerpoint To EXE Converter")
+            Case "PDFToEXEConverter"
+                Console.WriteLine("Packer: PDF To EXE Converter")
+            Case Else
+                Console.WriteLine("Packer: ???")
+        End Select
+    End Sub
+
+    Private Function MoveWithinArray(ByVal array As Array, ByVal source As Integer, ByVal dest As Integer) As Array
+        Dim temp As Object = array.GetValue(source)
+        System.Array.Copy(array, dest, array, dest + 1, source - dest)
+        array.SetValue(temp, dest)
+        Return array
+    End Function
 
     Public Sub Extract()
+        GetPacker()
+        Dim prj_dmp As Boolean = False
         Dim audio_dmp As Boolean = False
-        ext_path = My.Application.Info.DirectoryPath & "/4dotsExcelEXEUnpacker/" & asm_name & "/"
+        ext_path = My.Application.Info.DirectoryPath & "/4dotsOfficeEXEConverterUnpacker/" & asm_name & "/"
         IO.Directory.CreateDirectory(ext_path)
         Dim img_int As Integer = 0
         Dim manifestResourceNames As String() = asm.GetManifestResourceNames()
-        For i As Integer = 2 To manifestResourceNames.Length - 1
+        For x = 0 To manifestResourceNames.Count - 1
+            If manifestResourceNames(x).Contains("project.xml") Then
+                manifestResourceNames = MoveWithinArray(manifestResourceNames, x, 0)
+                Exit For
+            End If
+        Next
+        For i As Integer = 0 To manifestResourceNames.Length - 1
             If manifestResourceNames(i).IndexOf("project.xml") >= 0 Then
                 Using temp_str As New IO.MemoryStream()
                     Using FileStream As FileStream = File.Create(ext_path & "project.xml")
                         asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(FileStream)
                     End Using
+                    prj_dmp = True
                     prj.Load(ext_path & "project.xml")
                     Console.ForegroundColor = ConsoleColor.Magenta
-                    Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
+                    Try
+                        Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
+                    Catch ex As Exception
+                        If IO.File.ReadAllText(ext_path & "project.xml").Contains("AskForPasswordValue") AndAlso prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value <> "" Then
+                            Console.ForegroundColor = ConsoleColor.Red
+                            Console.WriteLine("Failed to retrieve password!")
+                        Else
+                            Console.ForegroundColor = ConsoleColor.Green
+                            Console.WriteLine("Password: Nothing set")
+                        End If
+                    End Try
                     Console.WriteLine()
                 End Using
             Else
@@ -151,28 +184,34 @@ Public Class Unpacker
                                 Continue For
                             End If
                             Try
-                                If CryptedImages() Then
+                                If prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("EncryptImages").Value.ToString = "True" Then
                                     Console.ForegroundColor = ConsoleColor.Green
-                                    Console.WriteLine("Found Image N°" & img_int & "! (Crypted), decrypting...")
+                                    Console.WriteLine("Found Image N°" & img_int + 1 & "! (Crypted), decrypting...")
                                     Dim buffer2 As Byte() = DecryptBytes(memoryStream.ToArray(), "433424234234-93435849839453")
                                     'File.WriteAllBytes(manifestResourceNames(i), buffer2)
                                     Dim stream As MemoryStream = New MemoryStream(buffer2)
-                                    Dim item As Image = Image.FromStream(stream)
+                                    Image.FromStream(stream).Save(manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
                                     Console.ForegroundColor = ConsoleColor.Yellow
-                                    Console.WriteLine("Dumping image n°" & img_int & "...")
-                                    item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
-                                    Console.WriteLine("Image N°" & img_int & " successfully dumped!")
+                                    Console.WriteLine("Dumping image n°" & img_int + 1 & "...")
+                                    'Using fs As New FileStream(ext_path & "\image_" & i & ".png", FileMode.Create)
+                                    '    memoryStream.CopyTo(fs)
+                                    'End Using
+                                    'item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
+                                    Console.WriteLine("Image N°" & img_int + 1 & " successfully dumped!")
                                     Console.ResetColor()
                                     img_int += 1
                                 Else
                                     Console.ForegroundColor = ConsoleColor.Green
-                                    Console.WriteLine("Found Image N°" & img_int & "! (Not Crypted), decrypting...")
-                                    Dim item As Image = Image.FromStream(memoryStream)
+                                    Console.WriteLine("Found Image N°" & img_int + 1 & "! (Not Crypted), decrypting...")
+                                    Image.FromStream(memoryStream).Save(manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
                                     Console.ForegroundColor = ConsoleColor.Yellow
-                                    Console.WriteLine("Dumping image n°" & img_int & "...")
-                                    item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
+                                    Console.WriteLine("Dumping image n°" & img_int + 1 & "...")
+                                    'Using fs As New FileStream(ext_path & "\image_" & i & ".png", FileMode.Create)
+                                    '    memoryStream.CopyTo(fs)
+                                    'End Using
+                                    'item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
                                     Console.ForegroundColor = ConsoleColor.Green
-                                    Console.WriteLine("Image N°" & img_int & " successfully dumped!")
+                                    Console.WriteLine("Image N°" & img_int + 1 & " successfully dumped!")
                                     Console.ResetColor()
                                     img_int += 1
                                 End If
@@ -184,7 +223,11 @@ Public Class Unpacker
             End If
         Next
         Console.ForegroundColor = ConsoleColor.Green
+        Console.WriteLine()
         Console.Write("Done! (dumped ")
+        If prj_dmp Then
+            Console.Write("project.xml, ")
+        End If
         If audio_dmp Then
             Console.Write("background audio & ")
         End If
