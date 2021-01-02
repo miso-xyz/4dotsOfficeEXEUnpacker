@@ -1,13 +1,20 @@
-# 4dots's Office EXE Unpacker (4 in 1)
+# 4dots's Office EXE Unpacker (5 in 1)
 This application can unpack the following packers made by 4dots Software:
 ```
 - Excel To EXE Converter (tested on v2.0 & v2.1)
 - Powerpoint To EXE Converter (tested on v3.3)
 - Word To EXE Converter (tested on v2.2)
 - PDF To EXE Converter (tested on v1.3)
+- ZIP Self Extractor Maker (tested on v1.3)
 ```
 
 # Changelog
+1.0.3:
+```
+- Can now unpack 4dots software's ZIP Self Extractor Maker (tested on v1.3).
+- Added error messages for failed attempts at image extraction.
+```
+
 1.0.2:
 ```
 - Image dumping algorithm now works properly (for both crypted & non-crypted images)
