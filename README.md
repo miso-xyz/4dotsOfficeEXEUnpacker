@@ -10,13 +10,18 @@ Converters:
 Other:
 - ZIP Self Extractor Maker (tested on v1.3)
 - Standalone EXE Locker (tested on v2.1) - port of my GUI Unpacker
+- EXE Slideshow Maker (tested on v1.6)
 
 Incompatible with:
 - Standalone EXE Document Locker (tested on v1.1) | Only Detects Packer - will be a fork of my GUI unpacker
-- EXE Slideshow Maker (tested on v1.6)
 ```
 
 # Changelog
+1.0.5:
+```
+- Added Support for EXE Slideshow Maker (tested on v1.6)
+```
+
 1.0.4:
 ```
 - Added Support for Standalone EXE Locker (tested on v2.1)
