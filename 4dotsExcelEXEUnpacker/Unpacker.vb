@@ -70,33 +70,47 @@ Public Class Unpacker
         End Try
         Return result
     End Function
-    Sub GetPacker()
+    Function GetPacker(ByVal printOutput As Boolean) As String
         Dim manifestResourceNames As String() = asm.GetManifestResourceNames()
         Dim aa_ As New List(Of String)
+        Dim ab__ As New List(Of String)
         For Each Type In asm.GetTypes()
             aa_.Add(Type.Namespace)
+            ab__.Add(Type.Name)
         Next
         Dim ab_ As String
         For x = 0 To aa_.Count - 1
             ab_ += aa_(x) & "|"
         Next
         Console.ForegroundColor = ConsoleColor.Yellow
+        Dim name_
         Select Case aa_(1)
             Case "ConvertExcelToEXE4dots"
-                Console.WriteLine("Packer: Excel To EXE Converter")
+                name_ = "Excel To EXE Converter"
             Case "ConvertWordToEXE4dots"
-                Console.WriteLine("Packer: Word To EXE Converter")
+                name_ = "Word To EXE Converter"
             Case "ConvertPowerpointToEXE4dots"
-                Console.WriteLine("Packer: Powerpoint To EXE Converter")
+                name_ = "Powerpoint To EXE Converter"
             Case "PDFToEXEConverter"
-                Console.WriteLine("Packer: PDF To EXE Converter")
+                name_ = "PDF To EXE Converter"
             Case "ZIPSelfExtractor"
-                Console.WriteLine("Packer: ZIP Self Extractor Maker")
+                name_ = "ZIP Self Extractor Maker"
+            Case "LockedDocument"
+                name_ = "EXE (Document) Locker"
             Case Else
-                Console.WriteLine("Packer: ???")
+                name_ = "???"
         End Select
-        Console.WriteLine()
-    End Sub
+        If ab__.Contains("EXESlideshowProject") Then
+            name_ = "EXE Slideshow Maker"
+        End If
+        If printOutput Then
+            Console.WriteLine("Packer: " & name_)
+            Console.WriteLine()
+            Return Nothing
+        Else
+            Return name_
+        End If
+    End Function
 
     Private Function MoveWithinArray(ByVal array As Array, ByVal source As Integer, ByVal dest As Integer) As Array
         Dim temp As Object = array.GetValue(source)
@@ -115,11 +129,13 @@ Public Class Unpacker
     End Function
 
     Public Sub Extract()
-        GetPacker()
+        GetPacker(True)
         Dim prj_dmp As Boolean = False
         Dim zip_sem As Boolean = False
         Dim zip_sem_s As Boolean = False
         Dim audio_dmp As Boolean = False
+        Dim prj_load As Boolean = False
+        Dim loc_doc As Boolean = False
         ext_path = My.Application.Info.DirectoryPath & "/4dotsOfficeEXEConverterUnpacker/" & asm_name & "/"
         IO.Directory.CreateDirectory(ext_path)
         Dim img_int As Integer = 0
@@ -141,9 +157,32 @@ Public Class Unpacker
                         asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(FileStream)
                     End Using
                     prj_dmp = True
-                    prj.Load(ext_path & If(zip_sem, "project.zsp", "project.xml"))
                     Try
-                        If zip_sem Then
+                        prj.Load(ext_path & If(zip_sem, "project.zsp", "project.xml"))
+                        Console.ForegroundColor = ConsoleColor.Green
+                        Console.WriteLine("""" & If(zip_sem, "project.zsp", "project.xml") & """ (Not Crypted) found & loaded!")
+                        prj_load = True
+                    Catch ex As Exception
+                        Try
+                            IO.File.WriteAllText(ext_path & "decrypted_project.xml", DecryptString(IO.File.ReadAllText(ext_path & If(zip_sem, "project.zsp", "project.xml")), "4dotsSoftware012301230123"))
+                            prj.Load(ext_path & "decrypted_project.xml")
+                            Console.ForegroundColor = ConsoleColor.Green
+                            Console.WriteLine("""" & If(zip_sem, "project.zsp", "project.xml") & """ (Crypted) found & loaded!")
+                            prj_load = True
+                        Catch ex2 As Exception
+                            Console.ForegroundColor = ConsoleColor.Red
+                            Console.WriteLine("Failed to load project file!")
+                        End Try
+                    End Try
+                    Console.WriteLine()
+                    Try
+                        If zip_sem AndAlso prj_load Then
+                            If GetPacker(False) = "EXE Slideshow Maker" Then
+                                Console.ForegroundColor = ConsoleColor.Yellow
+                                Console.WriteLine("No password can be set for these packed files.")
+                                Console.WriteLine()
+                                Continue For
+                            End If
                             Dim cn As New List(Of String)
                             For x = 0 To prj.SelectSingleNode("//Project").ChildNodes.Count - 1
                                 cn.Add(prj.SelectSingleNode("//Project").ChildNodes(x).InnerText)
@@ -158,22 +197,33 @@ Public Class Unpacker
                             Console.ForegroundColor = ConsoleColor.Magenta
                             Console.WriteLine("Password: " & If(cn(4) = "", "Nothing set", DecryptString(cn(4), "BAD0B46C-EDB8-4BAE-B538-F7C99556A023")))
                         Else
-                            Try
-                                Console.ForegroundColor = ConsoleColor.Magenta
-                                Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
-                            Catch ex As Exception
-                                If IO.File.ReadAllText(ext_path & "project.xml").Contains("AskForPasswordValue") AndAlso prj.SelectSingleNode(If(zip_sem, "//Project", "//Misc")).Attributes.GetNamedItem("AskForPasswordValue").Value <> "" Then
-                                    Console.ForegroundColor = ConsoleColor.Red
-                                    Console.WriteLine("Failed to retrieve password!")
-                                Else
-                                    Console.ForegroundColor = ConsoleColor.Green
-                                    Console.WriteLine("Password: Nothing set")
-                                End If
-                            End Try
+                            If prj_load Then
+                                Try
+                                    Console.ForegroundColor = ConsoleColor.Magenta
+                                    If prj.SelectSingleNode("//Project").Attributes(1).Name = "Password" Then
+                                        Console.WriteLine("Password: " & prj.SelectSingleNode("//Project").Attributes.GetNamedItem("Password").Value.ToString)
+                                        Console.ForegroundColor = ConsoleColor.Yellow
+                                        Console.WriteLine("Note: You can also use ""@#%$%DDGCS@#$%$$#%$%##%@#%$@#%fgsfgfdg"" to unlock")
+                                    Else
+                                        Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
+                                    End If
+                                Catch ex As Exception
+                                    If IO.File.ReadAllText(ext_path & "project.xml").Contains("AskForPasswordValue") = True Then
+                                        Console.ForegroundColor = ConsoleColor.Red
+                                        Console.WriteLine("Failed to retrieve password!")
+                                    Else
+                                        Console.ForegroundColor = ConsoleColor.Green
+                                        Console.WriteLine("Password: Nothing set")
+                                    End If
+                                End Try
+                            Else
+                                Console.ForegroundColor = ConsoleColor.Red
+                                Console.WriteLine("Failed to retrieve password & encryption information!")
+                            End If
                         End If
                     Catch ex As Exception
                         Console.ForegroundColor = ConsoleColor.Red
-                        Console.WriteLine("Failed to retrieve password & encryption information!")
+                        Console.WriteLine("Cannot get information! (project.xml cannot be processed)")
                     End Try
                     Console.WriteLine()
                 End Using
@@ -208,6 +258,41 @@ Public Class Unpacker
                                 End Try
                             End If
                         Else
+                            If manifestResourceNames(i).IndexOf("LockedDocument.rtf") >= 0 Then
+                                Console.ForegroundColor = ConsoleColor.Yellow
+                                Try
+                                    If prj.SelectSingleNode("//Project").Attributes.GetNamedItem("EncryptFiles").Value.ToString = "True" Then
+                                        Console.WriteLine("Found LockedDocument.rtf (Crypted)!")
+                                        Using ms As New MemoryStream
+                                            asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(ms)
+                                            Try
+                                                File.WriteAllBytes(ext_path & "LockedDocument.rtf.exe", DecryptBytes(ms.ToArray, prj.SelectSingleNode("//Project").Attributes.GetNamedItem("Password").Value.ToString))
+                                            Catch ex As Exception
+                                                Try
+                                                    File.WriteAllBytes(ext_path & "LockedDocument.rtf", DecryptBytes(ms.ToArray, "4dotsSoftware012301230123"))
+                                                Catch ex2 As Exception
+                                                    Exit For
+                                                    Console.ForegroundColor = ConsoleColor.Red
+                                                    Console.WriteLine("Failed to dump LockedDocument.rtf")
+                                                End Try
+                                            End Try
+                                        End Using
+                                    Else
+                                        Console.WriteLine("Found LockedDocument.rtf (Not Crypted)!")
+                                        Using ms As New MemoryStream
+                                            asm.GetManifestResourceStream(manifestResourceNames(i)).CopyTo(ms)
+                                            File.WriteAllBytes(ext_path & "LockedDocument.rtf.exe", ms.ToArray)
+                                        End Using
+                                    End If
+                                    Console.ForegroundColor = ConsoleColor.Green
+                                    Console.WriteLine("LockedDocument.rtf Successfully dumped!")
+                                    loc_doc = True
+                                Catch ex As Exception
+                                    Console.ForegroundColor = ConsoleColor.Red
+                                    Console.WriteLine("Failed to dump LockedDocument.rtf")
+                                    Console.ResetColor()
+                                End Try
+                            End If
                             If manifestResourceNames(i).IndexOf("4dotsAudio") >= 0 Then
                                 If only_img Then
                                     Console.ForegroundColor = ConsoleColor.Yellow
@@ -241,6 +326,9 @@ Public Class Unpacker
                                     Console.ResetColor()
                                     Continue For
                                 End If
+                                If GetPacker(False) = "EXE Slideshow Maker" Then
+                                    GoTo img_nocr
+                                End If
                                 If prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("EncryptImages").Value.ToString = "True" Then
                                     Try
                                         Console.ForegroundColor = ConsoleColor.Green
@@ -263,18 +351,15 @@ Public Class Unpacker
                                         Console.WriteLine("Failed to extract crypted image n°" & img_int + 1)
                                         Console.ResetColor()
                                     End Try
-                                    
+
                                 Else
+img_nocr:
                                     Try
                                         Console.ForegroundColor = ConsoleColor.Green
                                         Console.WriteLine("Found Image N°" & img_int + 1 & "! (Not Crypted), decrypting...")
                                         Image.FromStream(memoryStream).Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
                                         Console.ForegroundColor = ConsoleColor.Yellow
                                         Console.WriteLine("Dumping image n°" & img_int + 1 & "...")
-                                        'Using fs As New FileStream(ext_path & "\image_" & i & ".png", FileMode.Create)
-                                        '    memoryStream.CopyTo(fs)
-                                        'End Using
-                                        'item.Save(ext_path & manifestResourceNames(i), System.Drawing.Imaging.ImageFormat.Png)
                                         Console.ForegroundColor = ConsoleColor.Green
                                         Console.WriteLine("Image N°" & img_int + 1 & " successfully dumped!")
                                         Console.ResetColor()
@@ -300,6 +385,8 @@ Public Class Unpacker
             Else
                 Console.Write("nothing)")
             End If
+        ElseIf loc_doc Then
+            Console.Write("project.xml & LockedDocument.rtf)")
         Else
             If prj_dmp Then
                 Console.Write("project.xml, ")
