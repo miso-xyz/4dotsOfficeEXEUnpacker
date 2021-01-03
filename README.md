@@ -1,4 +1,4 @@
-# 4dots's Office EXE Unpacker (6 in 1)
+# 4dots's Office EXE Unpacker (7 in 1)
 This application can unpack the following packers made by 4dots Software:
 ```
 Converters:
