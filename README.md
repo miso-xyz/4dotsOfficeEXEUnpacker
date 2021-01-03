@@ -12,7 +12,8 @@ Other:
 - Standalone EXE Locker (tested on v2.1) - port of my GUI Unpacker
 
 Incompatible with:
-- Standalone EXE Document Locker (tested on v1.1) | Only Detects Packer
+- Standalone EXE Document Locker (tested on v1.1) | Only Detects Packer - will be a fork of my GUI unpacker
+- EXE Slideshow Maker (tested on v1.6)
 ```
 
 # Changelog
