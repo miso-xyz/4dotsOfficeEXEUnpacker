@@ -84,23 +84,22 @@ Public Class Unpacker
         Next
         Console.ForegroundColor = ConsoleColor.Yellow
         Dim name_
-        Select Case aa_(1)
-            Case "ConvertExcelToEXE4dots"
-                name_ = "Excel To EXE Converter"
-            Case "ConvertWordToEXE4dots"
-                name_ = "Word To EXE Converter"
-            Case "ConvertPowerpointToEXE4dots"
-                name_ = "Powerpoint To EXE Converter"
-            Case "PDFToEXEConverter"
-                name_ = "PDF To EXE Converter"
-            Case "ZIPSelfExtractor"
-                name_ = "ZIP Self Extractor Maker"
-            Case "LockedDocument"
-                name_ = "EXE (Document) Locker"
-            Case Else
-                name_ = "???"
-        End Select
-        If ab__.Contains("EXESlideshowProject") Then
+        If aa_.Contains("ConvertExcelToEXE4dots") Then
+            name_ = "Excel To EXE Converter"
+        ElseIf aa_.Contains("ConvertWordToEXE4dots") Then
+            name_ = "Word To EXE Converter"
+        ElseIf aa_.Contains("ConvertPowerpointToEXE4dots") Then
+            name_ = "Powerpoint To EXE Converter"
+        ElseIf aa_.Contains("PDFToEXEConverter") Then
+            name_ = "PDF To EXE Converter"
+        ElseIf aa_.Contains("ZIPSelfExtractor") Then
+            name_ = "ZIP Self Extractor Maker"
+        ElseIf aa_.Contains("LockedDocument") Then
+            name_ = "EXE (Document) Locker"
+        Else
+            name_ = "???"
+        End If
+        If name_ = "???" AndAlso ab__.Contains("EXESlideshowProject") Then
             name_ = "EXE Slideshow Maker"
         End If
         If printOutput Then
