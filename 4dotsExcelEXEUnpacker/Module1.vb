@@ -1,9 +1,9 @@
 ﻿Module Module1
     Dim Unpacker As New Unpacker
     Sub Main(ByVal args() As String)
-        Console.Title = "4dots Office to EXE Converter Unpacker v1.0.5"
+        Console.Title = "4dots Office to EXE Converter Unpacker v1.0.6"
         If args.Contains("--help") Then
-            Console.WriteLine("4dots Office to EXE Converter Unpacker v1.0.5 by misonothx | sinister.ly")
+            Console.WriteLine("4dots Office to EXE Converter Unpacker v1.0.6 by misonothx | sinister.ly")
             Console.WriteLine()
             Console.WriteLine("--help | Lists available arguments")
             Console.WriteLine("--only_audio | only dumps the background audio")
@@ -12,7 +12,7 @@
             Console.ReadKey()
             End
         End If
-        Console.WriteLine("4dots Office to EXE Converter Unpacker v1.0.5 by misonothx | sinister.ly")
+        Console.WriteLine("4dots Office to EXE Converter Unpacker v1.0.6 by misonothx | sinister.ly")
         Console.Write("arguments given: ")
         If args.Length = 0 Then
             Console.Write("nothing")

@@ -208,13 +208,17 @@ Public Class Unpacker
                                         Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
                                     End If
                                 Catch ex As Exception
-                                    If IO.File.ReadAllText(ext_path & "project.xml").Contains("AskForPasswordValue") = True Then
-                                        Console.ForegroundColor = ConsoleColor.Red
-                                        Console.WriteLine("Failed to retrieve password!")
-                                    Else
-                                        Console.ForegroundColor = ConsoleColor.Green
-                                        Console.WriteLine("Password: Nothing set")
-                                    End If
+                                    Try
+                                        Console.WriteLine("Password: " & DecryptString(prj.SelectSingleNode("//Misc").Attributes.GetNamedItem("AskForPasswordValue").Value.ToString(), "493589549485043859430889230823"))
+                                    Catch ex2 As Exception
+                                        If IO.File.ReadAllText(ext_path & "project.xml").Contains("AskForPasswordValue") = True Then
+                                            Console.ForegroundColor = ConsoleColor.Red
+                                            Console.WriteLine("Failed to retrieve password!")
+                                        Else
+                                            Console.ForegroundColor = ConsoleColor.Green
+                                            Console.WriteLine("Password: Nothing set")
+                                        End If
+                                    End Try
                                 End Try
                             Else
                                 Console.ForegroundColor = ConsoleColor.Red
