@@ -3,27 +3,22 @@ This application can unpack the following packers made by 4dots Software:
 ```
 Converters:
 - Excel To EXE Converter
-  |- v2.0 & v2.1 - 1.0 <
-  |- v2.2 - 1.0.6 <
-  
+  - v2.0 & v2.1 - 1.0 <
+  - v2.2 - 1.0.6 <
 - Powerpoint To EXE Converter (tested on v3.3)
-  |- v3.3 - 1.0.2 <
-  
+  - v3.3 - 1.0.2 <
 - Word To EXE Converter
-  |- v2.2 - 1.0.2 <
-  
+  - v2.2 - 1.0.2 <
 - PDF To EXE Converter
-  |- v1.3 - 1.0.2 <
-
+  - v1.3 - 1.0.2 <
+  
 Other:
 - ZIP Self Extractor Maker
-  |- v1.3 - 1.0.3 <
-  
+  - v1.3 - 1.0.3 <
 - Standalone EXE Locker - port of my GUI Unpacker
-  |- v2.1 - 1.0.4 <
-  
+  - v2.1 - 1.0.4 <
 - EXE Slideshow Maker
-  |- v1.6 - 1.0.5 <
+  - v1.6 - 1.0.5 <
 
 Incompatible with:
 - Standalone EXE Document Locker (tested on v1.1) | Only Detects Packer - will be a fork of my GUI unpacker
@@ -32,7 +27,8 @@ Incompatible with:
 # Changelog
 1.0.6:
 ```
-- Added support for 4dots Excel To EXE v2.2 (unpacking apps from that version using older versions of the unpacker coudn't retrieve the password)
+- Added support for 4dots Excel To EXE v2.2 (unpacking apps from that version using older
+  versions of the unpacker coudn't retrieve the password)
 - Slight improvements on the Packer Name retriever
 ```
 
