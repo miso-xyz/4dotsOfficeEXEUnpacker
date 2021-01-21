@@ -5,18 +5,23 @@ Converters:
 - Excel To EXE Converter
   |- v2.0 & v2.1 - 1.0 <
   |- v2.2 - 1.0.6 <
+  
 - Powerpoint To EXE Converter (tested on v3.3)
   |- v3.3 - 1.0.2 <
+  
 - Word To EXE Converter
   |- v2.2 - 1.0.2 <
+  
 - PDF To EXE Converter
   |- v1.3 - 1.0.2 <
 
 Other:
 - ZIP Self Extractor Maker
   |- v1.3 - 1.0.3 <
+  
 - Standalone EXE Locker - port of my GUI Unpacker
   |- v2.1 - 1.0.4 <
+  
 - EXE Slideshow Maker
   |- v1.6 - 1.0.5 <
 
