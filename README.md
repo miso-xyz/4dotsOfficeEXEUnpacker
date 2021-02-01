@@ -17,6 +17,7 @@ Other:
   - v1.3 - 1.0.3 <
 - Standalone EXE Locker - port of my GUI Unpacker
   - v2.1 - 1.0.4 <
+  - v2.2 - 1.0.6 <
 - EXE Slideshow Maker
   - v1.6 - 1.0.5 <
 
