@@ -5,7 +5,7 @@ Converters:
 - Excel To EXE Converter
   - v2.0 & v2.1 - 1.0 <
   - v2.2 - 1.0.6 <
-- Powerpoint To EXE Converter (tested on v3.3)
+- Powerpoint To EXE Converter
   - v3.3 - 1.0.2 <
 - Word To EXE Converter
   - v2.2 - 1.0.2 <
